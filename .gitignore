@@ -1,3 +1,4 @@
 /mnt
 /disk.img
 /bootloader/BOOTX64.EFI*
+*.bin
