@@ -8,18 +8,8 @@ cleanup() {
     losetup -d $dev
 }
 
-dd if=/dev/zero of=disk.img bs=512 count=204800
-
-dev="$(losetup --show -f disk.img)"
+dev="$(losetup --show -P -f disk.img)"
 trap cleanup EXIT
-
-parted -s $dev \
-mklabel gpt \
-mkpart EFI 1Mib 34Mib set 1 esp on \
-mkpart Primary 34Mib 99Mib
-
-mkfs -t fat -F 32 ${dev}p1
-mkfs -t ext4 ${dev}p2
 
 mkdir -p mnt/boot
 mount ${dev}p1 mnt/boot

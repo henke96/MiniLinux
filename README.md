@@ -1,0 +1,1 @@
+Pass `root=PARTLABEL=Primary` to the kernel so it finds the root filesystem.
