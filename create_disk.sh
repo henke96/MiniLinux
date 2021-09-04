@@ -27,5 +27,6 @@ mount ${dev}p1 mnt/boot
 mkdir -p mnt/primary
 mount ${dev}p2 mnt/primary
 
+echo "Disk device is: $dev"
 echo "Entering shell, use Ctrl-D when done..."
 bash
