@@ -24,7 +24,7 @@ int set_ip(void) {
         .sin_family = AF_INET,
         .sin_port = 0,
         .sin_addr = {
-            .s_addr = inet_addr("10.0.0.1")
+            .s_addr = inet_addr("192.168.10.30")
         }
     };
 
