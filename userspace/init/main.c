@@ -32,12 +32,12 @@ int set_ip(void) {
     memcpy( (((char *)&ifreq + offsetof(struct ifreq, ifr_addr) )),
                         p, sizeof(struct sockaddr));
 
-    ioctl(sockFd, SIOCSIFADDR, &ifreq);
-    ioctl(sockFd, SIOCGIFFLAGS, &ifreq);
+    if (ioctl(sockFd, SIOCSIFADDR, &ifreq) < 0) return -2;
+    if (ioctl(sockFd, SIOCGIFFLAGS, &ifreq) < 0) return -3;
 
     ifreq.ifr_flags |= IFF_UP | IFF_RUNNING;
 
-    ioctl(sockFd, SIOCSIFFLAGS, &ifreq);
+    if (ioctl(sockFd, SIOCSIFFLAGS, &ifreq) < 0) return -4;
     close(sockFd);
 }
 
@@ -84,16 +84,13 @@ int dump_ifaces(void) {
     return 0;
 }
 
-int start_chess(void) {
-    execl("/bin/chess", "chess", NULL);
-    printf("Fak\n");
-}
-
 int main(int argc, char **argv) {
-    dump_ifaces();
-    set_ip();
-    dump_ifaces();
-    start_chess();
-    pause();
+    int status = dump_ifaces();
+    if (status < 0) printf("status1=%d\n", status);
+    status = set_ip();
+    if (status < 0) printf("status2=%d\n", status);
+    status = dump_ifaces();
+    if (status < 0) printf("status3=%d\n", status);
+    execl("/bin/chess", "chess", NULL);
     return 0;
 }

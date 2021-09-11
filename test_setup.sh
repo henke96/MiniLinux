@@ -2,7 +2,7 @@
 
 # EFI
 mkdir -p mnt/boot/EFI/BOOT
-cp ../../misc/linux-5.13.13/arch/x86/boot/bzImage mnt/boot/EFI/BOOT/BOOTX64.EFI
+cp ../../misc/linux-5.14.2/arch/x86/boot/bzImage mnt/boot/EFI/BOOT/BOOTX64.EFI
 
 # Userspace
 mkdir -p mnt/primary/dev
