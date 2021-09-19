@@ -8,6 +8,8 @@
 #include <linux/sockios.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/mount.h>
+#include <fcntl.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -60,15 +62,15 @@ int dump_ifaces(void) {
             );
             if (family == AF_INET) {
                 struct sockaddr_in *addr_in = (struct sockaddr_in *)ifaddrs->ifa_addr;
-                inet_ntop(AF_INET, &(addr_in->sin_addr), &temp[0], INET_ADDRSTRLEN);
+                if (inet_ntop(AF_INET, &(addr_in->sin_addr), &temp[0], INET_ADDRSTRLEN) == NULL) return -2;
                 printf("%s\n", &temp[0]);
 
                 addr_in = (struct sockaddr_in *)ifaddrs->ifa_netmask;
-                inet_ntop(AF_INET, &(addr_in->sin_addr), &temp[0], INET_ADDRSTRLEN);
+                if (inet_ntop(AF_INET, &(addr_in->sin_addr), &temp[0], INET_ADDRSTRLEN) == NULL) return -3;
                 printf("%s\n", &temp[0]);
             } else if (family == AF_INET6) {
                 struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)ifaddrs->ifa_addr;
-                inet_ntop(AF_INET6, &(addr_in6->sin6_addr), &temp[0], INET6_ADDRSTRLEN);
+                if (inet_ntop(AF_INET6, &(addr_in6->sin6_addr), &temp[0], INET6_ADDRSTRLEN) == NULL) return -4;
                 printf("%s\n", &temp[0]);
             } else if (family == AF_PACKET) {
                 struct sockaddr_ll *addr_ll = (struct sockaddr_ll*)ifaddrs->ifa_addr;
@@ -86,11 +88,37 @@ int dump_ifaces(void) {
 
 int main(int argc, char **argv) {
     int status = dump_ifaces();
-    if (status < 0) printf("status1=%d\n", status);
+    if (status < 0) return 1;
     status = set_ip();
-    if (status < 0) printf("status2=%d\n", status);
+    if (status < 0) return 2;
     status = dump_ifaces();
-    if (status < 0) printf("status3=%d\n", status);
-    execl("/bin/chess", "chess", NULL);
+    if (status < 0) return 3;
+
+    if (mount("", "/proc", "proc", 0, NULL)) {
+        perror("mount(proc)");
+        return 4;
+    }
+    if (mount("", "/sys", "sysfs", 0, NULL)) {
+        perror("mount(sys)");
+        return 5;
+    }
+    if (mount("", "/dev", "devtmpfs", 0, NULL)) {
+        perror("mount(dev)");
+        return 6;
+    }
+
+    status = setsid();
+    if (status < 0) {
+        perror("setsid()");
+        return 7;
+    }
+    status = ioctl(0, TIOCSCTTY, 0);
+    if (status < 0) {
+        perror("ioctl(TIOCSCTTY)");
+        return 8;
+    }
+
+    status = execl("/bin/busybox", "busybox", "sh", NULL);
+    if (status < 0) return 9;
     return 0;
 }
