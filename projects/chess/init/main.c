@@ -15,7 +15,7 @@
 #include <string.h>
 #include <stddef.h>
 
-int set_ip(void) {
+static int set_ip(void) {
     struct ifreq ifreq;
 
     int sockFd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -43,7 +43,7 @@ int set_ip(void) {
     close(sockFd);
 }
 
-int dump_ifaces(void) {
+static int dump_ifaces(void) {
     struct ifaddrs *ifaddrs;
     char temp[INET6_ADDRSTRLEN];
 
