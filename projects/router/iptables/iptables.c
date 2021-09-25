@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
     struct natEntry natEntry = {
         .entry = {
             .ip = natIp,
-            .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct natEntry),
+            .target_offset = sizeof(struct ipt_entry),
+            .next_offset = sizeof(struct natEntry),
         },
         .natTarget = {
             .target.u.user = {
@@ -85,8 +85,8 @@ int main(int argc, char **argv) {
 
     struct standardEntry standardEntry = {
         .entry = {
-            .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct standardEntry),
+            .target_offset = sizeof(struct ipt_entry),
+            .next_offset = sizeof(struct standardEntry),
         },
         .standardTarget = {
             .target.u.user = {
@@ -99,8 +99,8 @@ int main(int argc, char **argv) {
 
     struct errorEntry errorEntry = {
         .entry = {
-            .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct errorEntry),
+            .target_offset = sizeof(struct ipt_entry),
+            .next_offset = sizeof(struct errorEntry),
         },
         .errorTarget = {
             .target.u.user = {
