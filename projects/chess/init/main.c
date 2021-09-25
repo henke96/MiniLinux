@@ -94,31 +94,28 @@ int main(int argc, char **argv) {
     status = dump_ifaces();
     if (status < 0) return 3;
 
-    if (mount("", "/proc", "proc", 0, NULL)) {
+    if (mount("", "/proc", "proc", 0, NULL) < 0) {
         perror("mount(proc)");
         return 4;
     }
-    if (mount("", "/sys", "sysfs", 0, NULL)) {
-        perror("mount(sys)");
+    if (mount("", "/sys", "sysfs", 0, NULL) < 0) {
+        perror("mount(sysfs)");
         return 5;
     }
-    if (mount("", "/dev", "devtmpfs", 0, NULL)) {
-        perror("mount(dev)");
+    if (mount("", "/dev", "devtmpfs", 0, NULL) < 0) {
+        perror("mount(devtmpfs)");
         return 6;
     }
 
-    status = setsid();
-    if (status < 0) {
+    if (setsid() < 0) {
         perror("setsid()");
         return 7;
     }
-    status = ioctl(0, TIOCSCTTY, 0);
-    if (status < 0) {
+    if (ioctl(0, TIOCSCTTY, 0) < 0) {
         perror("ioctl(TIOCSCTTY)");
         return 8;
     }
 
-    status = execl("/bin/busybox", "busybox", "sh", NULL);
-    if (status < 0) return 9;
+    if (execl("/bin/busybox", "busybox", "sh", NULL) < 0) return 9;
     return 0;
 }
