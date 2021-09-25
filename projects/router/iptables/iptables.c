@@ -1,51 +1,55 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <linux/netfilter_ipv4/ip_tables.h>
 #include <linux/netfilter/nf_nat.h>
 #include <linux/netfilter/x_tables.h>
-#include <stdio.h>
 
-struct nat_target {
+struct natTarget {
     struct xt_entry_target target;
     struct nf_nat_ipv4_multi_range_compat data;
 };
 
-struct nat_entry {
+struct natEntry {
     struct ipt_entry entry;
-    struct nat_target nat_target;
+    struct natTarget natTarget;
 };
 
-struct standard_entry {
+struct standardEntry {
     struct ipt_entry entry;
-    struct xt_standard_target standard_target;
+    struct xt_standard_target standardTarget;
 };
 
-struct error_entry {
+struct errorEntry {
     struct ipt_entry entry;
-    struct xt_error_target error_target;
+    struct xt_error_target errorTarget;
 };
 
-struct replace_entries {
-    struct standard_entry prerouting_entry;
-    struct standard_entry input_entry;
-    struct standard_entry output_entry;
-    struct standard_entry postrouting_entry;
-    struct error_entry error_entry;
+struct replaceEntries {
+    struct standardEntry preroutingEntry;
+    struct standardEntry inputEntry;
+    struct standardEntry outputEntry;
+    struct natEntry postroutingNatEntry;
+    struct standardEntry postroutingEntry;
+    struct errorEntry errorEntry;
 };
 
 struct replace {
-    struct ipt_replace ipt_replace;
-    struct replace_entries replace_entries;
+    struct ipt_replace iptReplace;
+    struct replaceEntries replaceEntries;
 };
-
-
 
 int main(int argc, char **argv) {
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-    if (fd < 0) return 1;
+    if (fd < 0) {
+        printf("socket(AF_INET, SOCK_RAW, IPPROTO_RAW) = %d (%s)\n", fd, strerror(errno));
+        return 1;
+    }
 
     struct ipt_getinfo info = {
         .name = "nat"
@@ -53,18 +57,24 @@ int main(int argc, char **argv) {
     socklen_t size = sizeof(info);
     int status = getsockopt(fd, SOL_IP, IPT_SO_GET_INFO, &info, &size);
     if (status < 0) {
-        printf("getsockopt(GET_INFO) = %d\n", status);
+        printf("getsockopt(IPT_SO_GET_INFO) = %d (%s)\n", status, strerror(errno));
         return 1;
     }
 
-    struct nat_entry nat_entry = {
+    char interface[] = "enp6s0";
+    struct ipt_ip natIp = {0};
+    memcpy(&natIp.outiface, &interface[0], sizeof(interface));
+    memset(&natIp.outiface_mask, 0xFF, sizeof(interface));
+
+    struct natEntry natEntry = {
         .entry = {
+            .ip = natIp,
             .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct nat_entry),
+            .next_offset	= sizeof(struct natEntry),
         },
-        .nat_target = {
+        .natTarget = {
             .target.u.user = {
-                .target_size = sizeof(struct nat_target),
+                .target_size = sizeof(struct natTarget),
                 .name = "MASQUERADE"
             },
             .data = {
@@ -73,12 +83,12 @@ int main(int argc, char **argv) {
         }
     };
 
-    struct standard_entry standard_entry = {
+    struct standardEntry standardEntry = {
         .entry = {
             .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct standard_entry),
+            .next_offset	= sizeof(struct standardEntry),
         },
-        .standard_target = {
+        .standardTarget = {
             .target.u.user = {
                 .target_size = sizeof(struct xt_standard_target),
                 .name = XT_STANDARD_TARGET
@@ -87,12 +97,12 @@ int main(int argc, char **argv) {
         }
     };
 
-    struct error_entry error_entry = {
+    struct errorEntry errorEntry = {
         .entry = {
             .target_offset	= sizeof(struct ipt_entry),
-            .next_offset	= sizeof(struct error_entry),
+            .next_offset	= sizeof(struct errorEntry),
         },
-        .error_target = {
+        .errorTarget = {
             .target.u.user = {
                 .target_size = sizeof(struct xt_error_target),
                 .name = XT_ERROR_TARGET
@@ -105,41 +115,43 @@ int main(int argc, char **argv) {
     struct xt_counters *counters = malloc(sizeof(struct xt_counters) * info.num_entries);
 
     struct replace replace = {
-        .ipt_replace = {
+        .iptReplace = {
             .name = "nat",
             .valid_hooks = info.valid_hooks,
-            .num_entries = 5,
-            .size = sizeof(struct replace_entries),
+            .num_entries = 6,
+            .size = sizeof(struct replaceEntries),
             .hook_entry = {
-                offsetof(struct replace_entries, prerouting_entry),
-                offsetof(struct replace_entries, input_entry),
+                offsetof(struct replaceEntries, preroutingEntry),
+                offsetof(struct replaceEntries, inputEntry),
                 0xFFFFFFFF,
-                offsetof(struct replace_entries, output_entry),
-                offsetof(struct replace_entries, postrouting_entry)
+                offsetof(struct replaceEntries, outputEntry),
+                offsetof(struct replaceEntries, postroutingNatEntry)
             },
             .underflow = {
-                offsetof(struct replace_entries, prerouting_entry),
-                offsetof(struct replace_entries, input_entry),
+                offsetof(struct replaceEntries, preroutingEntry),
+                offsetof(struct replaceEntries, inputEntry),
                 0xFFFFFFFF,
-                offsetof(struct replace_entries, output_entry),
-                offsetof(struct replace_entries, postrouting_entry)
+                offsetof(struct replaceEntries, outputEntry),
+                offsetof(struct replaceEntries, postroutingEntry)
             },
             .num_counters = info.num_entries,
             .counters = counters
         },
-        .replace_entries = {
-            .prerouting_entry = standard_entry,
-            .input_entry = standard_entry,
-            .output_entry = standard_entry,
-            .postrouting_entry = standard_entry,
-            .error_entry = error_entry
+        .replaceEntries = {
+            .preroutingEntry = standardEntry,
+            .inputEntry = standardEntry,
+            .outputEntry = standardEntry,
+            .postroutingNatEntry = natEntry,
+            .postroutingEntry = standardEntry,
+            .errorEntry = errorEntry
         }
     };
 
     status = setsockopt(fd, SOL_IP, IPT_SO_SET_REPLACE, &replace, sizeof(replace));
+    int savedErrno = errno;
     free(counters);
     if (status < 0) {
-        printf("setsockopt(SET_REPLACE) = %d\n", status);
+        printf("setsockopt(IPT_SO_SET_REPLACE) = %d (%s)\n", status, strerror(savedErrno));
         return 1;
     }
     return 0;
