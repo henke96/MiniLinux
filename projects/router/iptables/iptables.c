@@ -45,6 +45,10 @@ struct replace {
 };
 
 int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("Usage: iptables INTERFACE\n");
+        return 1;
+    }
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (fd < 0) {
         printf("socket(AF_INET, SOCK_RAW, IPPROTO_RAW) = %d (%s)\n", fd, strerror(errno));
@@ -61,10 +65,10 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    char interface[] = "enp6s0";
     struct ipt_ip natIp = {0};
-    memcpy(&natIp.outiface, &interface[0], sizeof(interface));
-    memset(&natIp.outiface_mask, 0xFF, sizeof(interface));
+    size_t ifLen = strlen(argv[1]) + 1;
+    memcpy(&natIp.outiface, argv[1], ifLen);
+    memset(&natIp.outiface_mask, 0xFF, ifLen);
 
     struct natEntry natEntry = {
         .entry = {

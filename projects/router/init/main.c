@@ -40,6 +40,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    if (execl("/bin/busybox", "busybox", "sh", NULL) < 0) return 9;
+    if (execl("/bin/sh", "sh", "/etc/startup.sh", NULL) < 0) return 9;
     return 0;
 }
