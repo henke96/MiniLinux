@@ -30,6 +30,10 @@ int main(int argc, char **argv) {
         perror("mount(devpts)");
         return 1;
     }
+    if (mount("", "/tmp", "tmpfs", 0, NULL) < 0) {
+        perror("mount(tmpfs)");
+        return 1;
+    }
 
     if (setsid() < 0) {
         perror("setsid()");

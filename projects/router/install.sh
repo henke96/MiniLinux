@@ -9,6 +9,11 @@ BUSYBOX=../../misc/busybox-1.34.0/busybox
 DIR="$(dirname "${BASH_SOURCE[0]}")"
 MNT_DIR=$DIR/../../mnt
 
+# Build
+(cd $DIR/init && ./build.sh)
+(cd $DIR/dhcpconf && ./build.sh)
+(cd $DIR/iptables && ./build.sh)
+
 # EFI
 mkdir -p $MNT_DIR/boot/EFI/BOOT
 cp $KERNEL $MNT_DIR/boot/EFI/BOOT/BOOTX64.EFI
@@ -19,6 +24,7 @@ mkdir -p $MNT_DIR/primary/bin
 mkdir -p $MNT_DIR/primary/proc
 mkdir -p $MNT_DIR/primary/sys
 mkdir -p $MNT_DIR/primary/etc
+mkdir -p $MNT_DIR/primary/tmp
 
 # Busybox
 cp $BUSYBOX $MNT_DIR/primary/bin/busybox
@@ -35,3 +41,4 @@ cp $DIR/../common/sv-latin1 $MNT_DIR/primary/etc
 cp $DIR/etc/startup.sh $MNT_DIR/primary/etc/
 cp $DIR/init/init.bin $MNT_DIR/primary/bin/init
 cp $DIR/iptables/iptables.bin $MNT_DIR/primary/bin/iptables
+cp $DIR/dhcpconf/dhcpconf.bin $MNT_DIR/primary/bin/dhcpconf

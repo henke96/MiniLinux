@@ -16,5 +16,7 @@ echo "1" > /proc/sys/net/ipv4/ip_forward
 ip link set dev wan up
 ip link set dev eth0 up
 
-telnetd -l /bin/sh
+udhcpc -b -R -i wan -s /bin/dhcpconf
+
+telnetd -b 192.168.0.1 -l /bin/sh
 exec sh
