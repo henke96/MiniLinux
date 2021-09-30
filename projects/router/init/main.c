@@ -3,47 +3,68 @@
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <sys/reboot.h>
 #include <fcntl.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <stddef.h>
 
-int main(int argc, char **argv) {
+int main(void) {
     if (mount("", "/proc", "proc", 0, NULL) < 0) {
         perror("mount(proc)");
-        return 1;
+        goto fail;
     }
     if (mount("", "/sys", "sysfs", 0, NULL) < 0) {
         perror("mount(sysfs)");
-        return 1;
+        goto fail;
     }
     if (mount("", "/dev", "devtmpfs", 0, NULL) < 0) {
         perror("mount(devtmpfs)");
-        return 1;
+        goto fail;
     }
     if (mkdir("/dev/pts", 0777) < 0) {
         perror("mkdir(/dev/pts)");
-        return 1;
+        goto fail;
     }
     if (mount("", "/dev/pts", "devpts", 0, NULL) < 0) {
         perror("mount(devpts)");
-        return 1;
+        goto fail;
     }
     if (mount("", "/tmp", "tmpfs", 0, NULL) < 0) {
         perror("mount(tmpfs)");
-        return 1;
+        goto fail;
     }
 
     if (setsid() < 0) {
         perror("setsid()");
-        return 1;
+        goto fail;
     }
     if (ioctl(0, TIOCSCTTY, 0) < 0) {
         perror("ioctl(TIOCSCTTY)");
-        return 1;
+        goto fail;
     }
-
-    if (execl("/bin/sh", "sh", "/etc/startup.sh", NULL) < 0) return 9;
-    return 0;
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork()");
+        goto fail;
+    }
+    if (pid == 0) {
+        if (execl("/bin/sh", "sh", "/etc/startup.sh", NULL) < 0) return 1;
+    } else {
+        for (;;) {
+            int wstatus;
+            pid_t termPid = waitpid(-1, &wstatus, 0);
+            if (termPid < 0) {
+                perror("waitpid()");
+                goto fail;
+            }
+            printf("PID %d terminated\n", termPid);
+        }
+    }
+    fail:
+    sync();
+    reboot(RB_AUTOBOOT);
+    return 1;
 }
