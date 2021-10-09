@@ -1,2 +1,2 @@
 #!/bin/sh
-gcc -static -o iptables.bin iptables.c
+gcc -static -o iptables.bin main.c

@@ -6,9 +6,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <linux/netfilter_ipv4/ip_tables.h>
-#include <linux/netfilter/nf_nat.h>
-#include <linux/netfilter/x_tables.h>
+#include "linux.h"
 
 struct natTarget {
     struct xt_entry_target target;

@@ -5,7 +5,6 @@
 #include <netpacket/packet.h>
 #include <net/if.h>
 #include <netinet/in.h>
-#include <linux/sockios.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/mount.h>
