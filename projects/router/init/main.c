@@ -30,6 +30,18 @@ int main(void) {
         perror("write(overcommit_memory)");
         goto fail;
     }
+    // Panic if we somehow still run out of memory.
+    fd = open("/proc/sys/vm/panic_on_oom", O_WRONLY);
+    if (fd < 0) {
+        perror("open(panic_on_oom)");
+        goto fail;
+    }
+    num = write(fd, "2", 1);
+    close(fd);
+    if (num != 1) {
+        perror("write(panic_on_oom)");
+        goto fail;
+    }
 
     if (mount("", "/sys", "sysfs", 0, NULL) < 0) {
         perror("mount(sysfs)");
