@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <sys/reboot.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -16,6 +17,20 @@ int main(void) {
         perror("mount(proc)");
         goto fail;
     }
+
+    // Disable memory overcommit as early as possible.
+    int fd = open("/proc/sys/vm/overcommit_memory", O_WRONLY);
+    if (fd < 0) {
+        perror("open(overcommit_memory)");
+        goto fail;
+    }
+    int num = write(fd, "2", 1);
+    close(fd);
+    if (num != 1) {
+        perror("write(overcommit_memory)");
+        goto fail;
+    }
+
     if (mount("", "/sys", "sysfs", 0, NULL) < 0) {
         perror("mount(sysfs)");
         goto fail;
@@ -34,6 +49,12 @@ int main(void) {
     }
     if (mount("", "/tmp", "tmpfs", 0, NULL) < 0) {
         perror("mount(tmpfs)");
+        goto fail;
+    }
+
+    // SIGPIPE should not exist.
+    if (sigaction(SIGPIPE, &(struct sigaction) { .sa_handler = SIG_IGN }, NULL) < 0) {
+        perror("sigaction(SIGPIPE)");
         goto fail;
     }
 
