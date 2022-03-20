@@ -17,5 +17,5 @@ mkdir -p mnt/primary
 mount ${dev}p2 mnt/primary
 
 echo "Disk device is: $dev"
-echo "Entering shell, use Ctrl-D when done..."
-bash
+echo "Entering shell, use Ctrl-D when done."
+$SHELL

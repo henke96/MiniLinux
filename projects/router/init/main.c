@@ -47,10 +47,6 @@ int main(void) {
         perror("mount(sysfs)");
         goto fail;
     }
-    if (mount("", "/dev", "devtmpfs", 0, NULL) < 0) {
-        perror("mount(devtmpfs)");
-        goto fail;
-    }
     if (mkdir("/dev/pts", 0777) < 0) {
         perror("mkdir(/dev/pts)");
         goto fail;

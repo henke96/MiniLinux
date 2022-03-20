@@ -1,44 +1,26 @@
-#!/bin/bash
+#!/bin/sh
+set -e
 
-# Config:
-# Linux Kernel (built with kernel_config as .config)
-KERNEL=../../misc/linux-5.14.2/arch/x86/boot/bzImage
-# Busybox (built with defconfig, static build)
-BUSYBOX=../../misc/busybox-1.34.0/busybox
-
-DIR="$(dirname "${BASH_SOURCE[0]}")"
-MNT_DIR=$DIR/../../mnt
-
-# Build
-(cd $DIR/init && ./build.sh)
-(cd $DIR/dhcpconf && ./build.sh)
-(cd $DIR/iptables && ./build.sh)
-
-# EFI
-mkdir -p $MNT_DIR/boot/EFI/BOOT
-cp $KERNEL $MNT_DIR/boot/EFI/BOOT/BOOTX64.EFI
-
-# Userspace
-mkdir -p $MNT_DIR/primary/dev
-mkdir -p $MNT_DIR/primary/bin
-mkdir -p $MNT_DIR/primary/proc
-mkdir -p $MNT_DIR/primary/sys
-mkdir -p $MNT_DIR/primary/etc
-mkdir -p $MNT_DIR/primary/tmp
+mkdir -p mnt/primary/bin
+mkdir -p mnt/primary/proc
+mkdir -p mnt/primary/sys
+mkdir -p mnt/primary/etc
+mkdir -p mnt/primary/tmp
 
 # Busybox
-cp $BUSYBOX $MNT_DIR/primary/bin/busybox
-ln -s /bin/busybox $MNT_DIR/primary/bin/ls
-ln -s /bin/busybox $MNT_DIR/primary/bin/sh
-ln -s /bin/busybox $MNT_DIR/primary/bin/loadkmap
-ln -s /bin/busybox $MNT_DIR/primary/bin/telnetd
-ln -s /bin/busybox $MNT_DIR/primary/bin/brctl
-ln -s /bin/busybox $MNT_DIR/primary/bin/ip
-ln -s /bin/busybox $MNT_DIR/primary/bin/udhcpc
-ln -s /bin/busybox $MNT_DIR/primary/bin/udhcpd
+cp common/third_party/busybox*/busybox mnt/primary/bin/busybox
+ln -s /bin/busybox mnt/primary/bin/ls
+ln -s /bin/busybox mnt/primary/bin/sh
+ln -s /bin/busybox mnt/primary/bin/loadkmap
+ln -s /bin/busybox mnt/primary/bin/telnetd
+ln -s /bin/busybox mnt/primary/bin/brctl
+ln -s /bin/busybox mnt/primary/bin/ip
+ln -s /bin/busybox mnt/primary/bin/udhcpc
+ln -s /bin/busybox mnt/primary/bin/udhcpd
 
-cp $DIR/../common/sv-latin1 $MNT_DIR/primary/etc
-cp $DIR/etc/startup.sh $MNT_DIR/primary/etc/
-cp $DIR/init/init.bin $MNT_DIR/primary/bin/init
-cp $DIR/iptables/iptables.bin $MNT_DIR/primary/bin/iptables
-cp $DIR/dhcpconf/dhcpconf.bin $MNT_DIR/primary/bin/dhcpconf
+cp projects/common/sv-latin1 mnt/primary/etc
+cp projects/router/etc/startup.sh mnt/primary/etc/
+cp projects/router/init/init.bin mnt/primary/bin/init
+cp projects/router/iptables/iptables.bin mnt/primary/bin/iptables
+cp projects/router/dhcpconf/dhcpconf.bin mnt/primary/bin/dhcpconf
+echo "Installed router!"
